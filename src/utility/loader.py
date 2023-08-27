@@ -37,16 +37,21 @@ class MnistDataloader(object):
         return images, labels
             
     def load_data(self):
-        x_train, y_train = self.read_images_labels(self.training_images_filepath, self.training_labels_filepath)
+        x_train_and_val, y_train_and_val = self.read_images_labels(self.training_images_filepath, self.training_labels_filepath)
         x_test, y_test = self.read_images_labels(self.test_images_filepath, self.test_labels_filepath)
-        return (x_train, y_train),(x_test, y_test)
+
+        x_train, y_train = x_train_and_val[:50000], y_train_and_val[:50000]
+        x_validation, y_validation = x_train_and_val[50000:], y_train_and_val[50000:]
+
+        return (x_train, y_train),(x_validation, y_validation),(x_test, y_test)
 
 
 #
-# Class for the data that NB uses - 70000 28x28 pixels images, 
-# 60000 for training, and 10000 for testing.
+# Class for the data that the classifiers use - 70000 28x28 pixels images, 
+# 50000 for training, 10000 for validation (tuning parameters, and 10000 for testing.
 #
-class NBData:
-    def __init__(self, training_set, testing_set):
+class Data:
+    def __init__(self, training_set, validation_set, testing_set):
         self.training_set = training_set
-        self.testing_set = testing_set  
+        self.validation_set = validation_set
+        self.testing_set = testing_set

@@ -1,6 +1,6 @@
 import numpy as np
 import math
-from classifier.features import *
+from src.naive_bayes.classifier.features import *
 
 #
 # Class for a Naive Bayes classifier.
@@ -109,9 +109,24 @@ class NaiveBayesClassifier:
             predictions.append(self.classify(image))
         return predictions
     
-    # method to evaluate the NB model on the testing set,
-    # returns the accuracy of the model on the test set
-    def evaluate(self):
+    # method to evaluate the NB model on the validation set.
+    # returns the accuracy of the model on the validation set
+    def evaluate_on_validation_set(self):
+        nb_predictions = self.classify_images(self.data.validation_set[0])
+        ground_truth = self.data.validation_set[1]
+
+        correct_classifications = 0
+        for i in range(len(self.data.validation_set[0])):
+            if nb_predictions[i] == ground_truth[i]:
+                correct_classifications += 1
+        
+        return correct_classifications / len(self.data.validation_set[0])
+
+    # method to evaluate the NB model on the testing set.
+    # returns the accuracy of the model on the testing set.
+    # this method should be run only once to get the final
+    # accuracy of the model, and avoid overfitting.
+    def evaluate_on_test_set(self):
         nb_predictions = self.classify_images(self.data.testing_set[0])
         ground_truth = self.data.testing_set[1]
 
@@ -121,3 +136,4 @@ class NaiveBayesClassifier:
                 correct_classifications += 1
         
         return correct_classifications / len(self.data.testing_set[0])
+    
