@@ -1,5 +1,8 @@
-# test
-show.py
-
-# pycacge
+# pycache
 __pycache__
+
+# tests
+test/
+
+# ide files
+.vscode/

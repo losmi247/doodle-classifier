@@ -52,6 +52,6 @@ class MnistDataloader(object):
 #
 class Data:
     def __init__(self, training_set, validation_set, testing_set):
-        self.training_set = training_set
-        self.validation_set = validation_set
-        self.testing_set = testing_set
+        self.training_set = list(zip(training_set[0], training_set[1]))
+        self.validation_set = list(zip(validation_set[0], validation_set[1]))
+        self.testing_set = list(zip(testing_set[0], testing_set[1]))

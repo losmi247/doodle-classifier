@@ -33,7 +33,7 @@ class NaiveBayesClassifier:
             category_cnt[category] = 1
 
         # count categories
-        for category in self.data.training_set[1]:
+        for _,category in self.data.training_set:
             category_cnt[category] += 1
 
         # maximum likelihood estimate
@@ -54,7 +54,7 @@ class NaiveBayesClassifier:
         images_of_category = {}
         for category in self.categories:
             images_of_category[category] = []
-        for image,cat in zip(self.data.training_set[0], self.data.training_set[1]):
+        for image,cat in self.data.training_set:
             images_of_category[cat].append(image)
         for category in self.categories:
             images_of_category[category] = np.array(images_of_category[category])
@@ -112,28 +112,28 @@ class NaiveBayesClassifier:
     # method to evaluate the NB model on the validation set.
     # returns the accuracy of the model on the validation set
     def evaluate_on_validation_set(self):
-        nb_predictions = self.classify_images(self.data.validation_set[0])
-        ground_truth = self.data.validation_set[1]
+        nb_predictions = self.classify_images([img for img,_ in self.data.validation_set])
+        ground_truth = [cat for _,cat in self.data.validation_set]
 
         correct_classifications = 0
-        for i in range(len(self.data.validation_set[0])):
+        for i in range(len(self.data.validation_set)):
             if nb_predictions[i] == ground_truth[i]:
                 correct_classifications += 1
         
-        return correct_classifications / len(self.data.validation_set[0])
+        return correct_classifications / len(self.data.validation_set)
 
     # method to evaluate the NB model on the testing set.
     # returns the accuracy of the model on the testing set.
     # this method should be run only once to get the final
     # accuracy of the model, and avoid overfitting.
     def evaluate_on_test_set(self):
-        nb_predictions = self.classify_images(self.data.testing_set[0])
-        ground_truth = self.data.testing_set[1]
+        nb_predictions = self.classify_images([img for img,_ in self.data.testing_set])
+        ground_truth = [cat for _,cat in self.data.testing_set]
 
         correct_classifications = 0
-        for i in range(len(self.data.testing_set[0])):
+        for i in range(len(self.data.testing_set)):
             if nb_predictions[i] == ground_truth[i]:
                 correct_classifications += 1
         
-        return correct_classifications / len(self.data.testing_set[0])
+        return correct_classifications / len(self.data.testing_set)
     
