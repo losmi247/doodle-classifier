@@ -28,11 +28,12 @@ def main():
     # for NNs, we need to flatten the 28x28 image to a 1D numpy array of length 784
     nndata = Data((x_train, y_train),(x_validation, y_validation),(x_test, y_test), flatten_inputs=True)
 
-    # create a NN and train it
+    # create a NN and train it - this setup gave 39% accuracy on validation set
     nn = NeuralNetwork([784,30,10],nndata)
-    number_of_epochs = 50
-    mini_batch_size = 20
-    accuracies, cost_functions = nn.train(epochs=number_of_epochs, m=mini_batch_size)
+    number_of_epochs = 30
+    mini_batch_size = 10
+    eta = 0.07
+    accuracies, cost_functions = nn.train(epochs=number_of_epochs, m=mini_batch_size, learning_rate=eta)
 
     # evaluate the model on the validation set
     print("Accuracy on validation set: ", nn.evaluate_on_validation_set())

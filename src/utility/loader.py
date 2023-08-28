@@ -39,6 +39,12 @@ class MnistDataloader(object):
     def load_data(self):
         x_train_and_val, y_train_and_val = self.read_images_labels(self.training_images_filepath, self.training_labels_filepath)
         x_test, y_test = self.read_images_labels(self.test_images_filepath, self.test_labels_filepath)
+        
+        # shuffle the larger dataset before dividing into training and validation sets
+        zipped = list(zip(x_train_and_val,y_train_and_val))
+        np.random.shuffle(zipped)
+        x_train_and_val = [x for x,_ in zipped]
+        y_train_and_val = [y for _,y in zipped]
 
         x_train, y_train = x_train_and_val[:50000], y_train_and_val[:50000]
         x_validation, y_validation = x_train_and_val[50000:], y_train_and_val[50000:]
