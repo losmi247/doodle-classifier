@@ -51,7 +51,20 @@ class MnistDataloader(object):
 # 50000 for training, 10000 for validation (tuning parameters, and 10000 for testing.
 #
 class Data:
-    def __init__(self, training_set, validation_set, testing_set):
-        self.training_set = list(zip(training_set[0], training_set[1]))
-        self.validation_set = list(zip(validation_set[0], validation_set[1]))
-        self.testing_set = list(zip(testing_set[0], testing_set[1]))
+    # constructor from the parsed train, validation, and test sets.
+    # originally, each input is a 28x28 numpy array, and a flag 'flatten_inputs'
+    # can be activated to flatten this into a 1D numpy array of length 784 - for
+    # instance that is what neural networks need (row major order for flattening).
+    def __init__(self, training_set, validation_set, testing_set, flatten_inputs = False):
+        if flatten_inputs:
+            training_set = [(x.flatten(),y) for x,y in zip(training_set[0],training_set[1])]
+            validation_set = [(x.flatten(),y) for x,y in zip(validation_set[0],validation_set[1])]
+            testing_set = [(x.flatten(),y) for x,y in zip(testing_set[0],testing_set[1])]
+        else:
+            training_set = list(zip(training_set[0], training_set[1]))
+            validation_set = list(zip(validation_set[0], validation_set[1]))
+            testing_set = list(zip(testing_set[0], testing_set[1]))
+        
+        self.training_set = training_set
+        self.validation_set = validation_set
+        self.testing_set = testing_set

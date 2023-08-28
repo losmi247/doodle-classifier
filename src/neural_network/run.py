@@ -6,9 +6,9 @@
 #
 # partly from https://www.kaggle.com/code/milospuric/read-mnist-dataset/edit
 from src.utility.loader import *
-from src.naive_bayes.classifier.features import *
-from src.naive_bayes.classifier.naive_bayes import *
+from src.neural_network.classifier.network import *
 from os.path import join
+import numpy as np
 import matplotlib.pyplot as plt 
 
 #
@@ -25,16 +25,33 @@ def main():
     mnist_dataloader = MnistDataloader(training_images_filepath, training_labels_filepath, test_images_filepath, test_labels_filepath)
     # (images, labels)
     (x_train, y_train), (x_validation, y_validation), (x_test, y_test) = mnist_dataloader.load_data()
-    nndata = Data((x_train, y_train),(x_validation, y_validation),(x_test, y_test))
+    # for NNs, we need to flatten the 28x28 image to a 1D numpy array of length 784
+    nndata = Data((x_train, y_train),(x_validation, y_validation),(x_test, y_test), flatten_inputs=True)
 
     # create a NN and train it
+    nn = NeuralNetwork([784,30,10],nndata)
+    number_of_epochs = 50
+    mini_batch_size = 20
+    accuracies, cost_functions = nn.train(epochs=number_of_epochs, m=mini_batch_size)
+
+    # evaluate the model on the validation set
+    print("Accuracy on validation set: ", nn.evaluate_on_validation_set())
     
-    
-    ind = 101
+    # plot stuff
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+
+    # plot the accuracy and cost function after each epoch
+    ax1.plot(np.arange(number_of_epochs), accuracies, color='blue', label='accuracy on train set after each epoch')
+    ax1.plot(np.arange(number_of_epochs), cost_functions, color='red', label='cost function after each epoch')
+    ax1.legend()
+
+    # show an example from the validation set
+    ind = 2543
     img = x_validation[ind]
-    # pred = nb_classifier.classify(img)
-    # print("Predicted: ", pred, ". True: ", y_validation[ind])
-    plt.imshow(img, cmap=plt.cm.gray)
+    pred = nn.classify(img)
+    print("Predicted: ", pred, ". True: ", y_validation[ind])
+    ax2.imshow(img, cmap=plt.cm.gray)
+
     plt.show()
 
 if __name__ == "__main__":
