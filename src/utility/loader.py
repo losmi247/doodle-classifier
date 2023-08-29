@@ -61,15 +61,20 @@ class Data:
     # originally, each input is a 28x28 numpy array, and a flag 'flatten_inputs'
     # can be activated to flatten this into a 1D numpy array of length 784 - for
     # instance that is what neural networks need (row major order for flattening).
+    #
+    # additionally, the MNIST images have pixel values from 0 to 255, so we first
+    # normalise these values to the [0,1] range to be used by classifiers.
     def __init__(self, training_set, validation_set, testing_set, flatten_inputs = False):
+        # normalise pixel values, and pair up inputs and ground truths
+        training_set = [(x/255.0,y) for x,y in zip(training_set[0],training_set[1])]
+        validation_set = [(x/255.0,y) for x,y in zip(validation_set[0],validation_set[1])]
+        testing_set = [(x/255.0,y) for x,y in zip(testing_set[0],testing_set[1])]
+
+        # flatten inputs if needed
         if flatten_inputs:
-            training_set = [(x.flatten(),y) for x,y in zip(training_set[0],training_set[1])]
-            validation_set = [(x.flatten(),y) for x,y in zip(validation_set[0],validation_set[1])]
-            testing_set = [(x.flatten(),y) for x,y in zip(testing_set[0],testing_set[1])]
-        else:
-            training_set = list(zip(training_set[0], training_set[1]))
-            validation_set = list(zip(validation_set[0], validation_set[1]))
-            testing_set = list(zip(testing_set[0], testing_set[1]))
+            training_set = [(x.flatten(),y) for x,y in training_set]
+            validation_set = [(x.flatten(),y) for x,y in validation_set]
+            testing_set = [(x.flatten(),y) for x,y in testing_set]
         
         self.training_set = training_set
         self.validation_set = validation_set

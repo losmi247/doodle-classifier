@@ -1,5 +1,6 @@
 import numpy as np
 import random
+from src.neural_network.classifier.cost_functions import *
 
 #
 #   Utility Methods
@@ -26,12 +27,14 @@ class NeuralNetwork:
         self.number_of_layers = len(layer_sizes)
         self.layer_sizes = layer_sizes
 
-        # parameters of the network
-        self.biases = [np.random.randn(s) for s in layer_sizes[1:]]
-        self.weights = [np.random.randn(x,y) for x,y in zip(layer_sizes[1:],layer_sizes[:-1])]
+        # initialise parameters of the network - weights and biases
+        self.initialise_variance_corrected_parameters()
 
         # the data
         self.data = data
+
+        # choose the cost function used
+        self.cost_function = MeanSquaredError
         
     #
     #   Methods
@@ -44,8 +47,12 @@ class NeuralNetwork:
             a = sigmoid(np.dot(w,a) + b)
         return a
     
+    #
+    #   Training Methods
+    #
+    
     # method to train the neural network
-    def train(self, epochs = 10, m = 100, learning_rate = 0.1):
+    def train(self, epochs = 30, m = 20, learning_rate = 0.001):
         accuracies = []
         cost_functions = []
 
@@ -62,7 +69,7 @@ class NeuralNetwork:
             print("Epoch ", i+1, "/", epochs, " finished.", end=" ")
             print("Accuracy on training set: ", correct_decisions, "/", len(self.data.training_set), end=", ")
             accuracies.append(correct_decisions/len(self.data.training_set))
-            cost = self.cost_function()
+            cost = self.cost_function.calc_cost_function(self)
             print("Cost function: ", cost)
             cost_functions.append(cost)
 
@@ -118,8 +125,8 @@ class NeuralNetwork:
         # y is an integer, so we need to make a vector out of it first
         y_vector = np.zeros(self.layer_sizes[-1])
         y_vector[y] = 1
-        # initialise the last layer errors
-        delta[-1] = (a[-1]-y_vector) * sigmoid_prime(z[-1])  # * is element-wise product
+        # initialise the last layer delta errors
+        delta[-1] = self.cost_function.cost_function_derivative(y_vector, a[-1]) * sigmoid_prime(z[-1])  # * is element-wise product
         # propagate back
         for l in range(self.number_of_layers-3,-1,-1):
             delta[l] = np.dot(np.transpose(self.weights[l+1]),delta[l+1]) * sigmoid_prime(z[l])   # * is element-wise product
@@ -141,19 +148,9 @@ class NeuralNetwork:
         
         return nabla_weights_x, nabla_biases_x, correct
     
-    # method to calculate the cost function (on the train set)
-    def cost_function(self):
-        c = 0
-        for x,y in self.data.training_set:
-            a = self.feed_forward(x)
-            # y is an integer, so we need to make a vector out of it first
-            y_vector = np.zeros(self.layer_sizes[-1])
-            y_vector[y] = 1
-            c += np.dot(a-y_vector,a-y_vector)
-
-        c /= 2*len(self.data.training_set)
-
-        return c
+    #
+    #   Classification Methods
+    #
     
     # method to classify a single image given either as a 28x28 numpy array
     # or a 784-element 1D numpy array
@@ -169,6 +166,31 @@ class NeuralNetwork:
         for image in images:
             predictions.append(self.classify(image))
         return predictions
+    
+    #
+    #   Parameter Initialisation Methods
+    #
+    
+    # method to initialise the weights and biases of the network, but the weights
+    # are sample from a normal distribution with corrected variance of 1/sqrt(k)
+    # where k is the number of neurons in the previous layer.
+    def initialise_variance_corrected_parameters(self):
+        # sample biases from N(0,1)
+        self.biases = [np.random.randn(s) for s in self.layer_sizes[1:]]
+        # sample weights from N(0,1/(number of neurons in layer before))
+        self.weights = [np.random.randn(x,y)/np.sqrt(y) for x,y in zip(self.layer_sizes[1:],self.layer_sizes[:-1])]
+
+    # method to initialise the weights and biases of the network by sampling both
+    # from the standard normal distribution
+    def initialise_parameters(self):
+        # sample biases from N(0,1)
+        self.biases = [np.random.randn(s) for s in self.layer_sizes[1:]]
+        # sample weights from N(0,1)
+        self.weights = [np.random.randn(x,y) for x,y in zip(self.layer_sizes[1:],self.layer_sizes[:-1])]
+
+    #
+    #   Evaluation methods
+    #
     
     # method to evaluate the NN model on the validation set.
     # returns the accuracy of the model on the validation set
