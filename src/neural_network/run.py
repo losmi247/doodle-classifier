@@ -30,9 +30,9 @@ def main():
 
     # create a NN and train it
     nn = NeuralNetwork([784,30,10],nndata)
-    number_of_epochs = 30
+    number_of_epochs = 20
     mini_batch_size = 20
-    eta = 0.001
+    eta = 0.0001
     accuracies, cost_functions = nn.train(epochs=number_of_epochs, m=mini_batch_size, learning_rate=eta)
 
     # evaluate the model on the validation set
