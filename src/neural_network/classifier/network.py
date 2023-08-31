@@ -8,8 +8,8 @@ from src.neural_network.classifier.cost_functions import *
 
 # can be applied to a numpy array
 def sigmoid(x):
-    # clip the values to avoid overflow and vanishing gradients
-    x = np.clip(x, -5, 5)
+    # clip the values to avoid overflow and vanishing gradients - removed for now
+    # x = np.clip(x, -100, 100)
     return 1.0 / (1.0 + np.exp(-x))
 
 # can be applied to a numpy array
@@ -23,7 +23,7 @@ def sigmoid_prime(x):
 #
 class NeuralNetwork:
     # constructor from an array of sizes of layers
-    def __init__(self, layer_sizes, data):
+    def __init__(self, layer_sizes, data, cost_function = MeanSquaredError):
         self.number_of_layers = len(layer_sizes)
         self.layer_sizes = layer_sizes
 
@@ -33,8 +33,8 @@ class NeuralNetwork:
         # the data
         self.data = data
 
-        # choose the cost function used
-        self.cost_function = MeanSquaredError
+        # set the cost function used
+        self.cost_function = cost_function
         
     #
     #   Methods
@@ -52,7 +52,7 @@ class NeuralNetwork:
     #
     
     # method to train the neural network
-    def train(self, epochs = 30, m = 20, learning_rate = 0.001):
+    def train(self, epochs = 30, m = 1250, learning_rate = 0.25):
         accuracies = []
         cost_functions = []
 
@@ -62,13 +62,15 @@ class NeuralNetwork:
             # make the mini batches
             mini_batches = [self.data.training_set[k*m:(k+1)*m] for k in range(len(self.data.training_set)//m)]
 
-            correct_decisions = 0
             for mini_batch in mini_batches:
-                correct_decisions += self.process_mini_batch(mini_batch, learning_rate)
+                self.process_mini_batch(mini_batch, learning_rate)
 
             print("Epoch ", i+1, "/", epochs, " finished.", end=" ")
-            print("Accuracy on training set: ", correct_decisions, "/", len(self.data.training_set), end=", ")
-            accuracies.append(correct_decisions/len(self.data.training_set))
+
+            training_accuracy = self.accuracy_on_train_set()
+            print("Accuracy on training set: ", training_accuracy, end=", ")
+            accuracies.append(training_accuracy)
+
             cost = self.cost_function.calc_cost_function(self)
             print("Cost function: ", cost)
             cost_functions.append(cost)
@@ -81,28 +83,20 @@ class NeuralNetwork:
         # the gradient that we will find
         nabla_weights = [np.zeros((x,y)) for x,y in zip(self.layer_sizes[1:],self.layer_sizes[:-1])]
         nabla_biases = [np.zeros(s) for s in self.layer_sizes[1:]]
-
-        # measure accuracy
-        correct_decisions = 0
         
         # go through each input in the mini batch and find gradient of Cx using backpropagation
         for x,y in mini_batch:
-            nabla_weights_x, nabla_biases_x, correct = self.backpropagate(x,y)
-
-            correct_decisions += correct
+            nabla_weights_x, nabla_biases_x = self.backpropagate(x,y)
     
             # sum up the contributions
-            nabla_weights = [nb+nbx for nb,nbx in zip(nabla_weights,nabla_weights_x)]
+            nabla_weights = [nw+nwx for nw,nwx in zip(nabla_weights,nabla_weights_x)]
             nabla_biases = [nb+nbx for nb,nbx in zip(nabla_biases,nabla_biases_x)]
         
         # move by -n*gradient(C) where C is the cost function - gradient descent
         self.weights = [w-(learning_rate/len(mini_batch))*nw for w,nw in zip(self.weights,nabla_weights)]
         self.biases = [b-(learning_rate/len(mini_batch))*nb for b,nb in zip(self.biases,nabla_biases)]
-
-        # report number of correct decisions in mini batch
-        return correct_decisions
         
-    # method to calculate the gradient of the cost function C
+    # method to calculate the gradient of the cost function C(x) for one input x
     def backpropagate(self, x, y):
         # weighted inputs
         z = [np.zeros(s) for s in self.layer_sizes[1:]]
@@ -118,15 +112,13 @@ class NeuralNetwork:
             a[l] = sigmoid(z[l])
             l += 1
 
-        correct = 1 if np.argmax(a[-1]) == y else 0
-
         # the derivatives by z
         delta = [np.zeros(s) for s in self.layer_sizes[1:]]
         # y is an integer, so we need to make a vector out of it first
         y_vector = np.zeros(self.layer_sizes[-1])
         y_vector[y] = 1
         # initialise the last layer delta errors
-        delta[-1] = self.cost_function.cost_function_derivative(y_vector, a[-1]) * sigmoid_prime(z[-1])  # * is element-wise product
+        delta[-1] = self.cost_function.cost_function_derivative(y_vector, a[-1], z[-1])
         # propagate back
         for l in range(self.number_of_layers-3,-1,-1):
             delta[l] = np.dot(np.transpose(self.weights[l+1]),delta[l+1]) * sigmoid_prime(z[l])   # * is element-wise product
@@ -146,7 +138,7 @@ class NeuralNetwork:
 
             l += 1
         
-        return nabla_weights_x, nabla_biases_x, correct
+        return nabla_weights_x, nabla_biases_x
     
     #
     #   Classification Methods
@@ -191,6 +183,18 @@ class NeuralNetwork:
     #
     #   Evaluation methods
     #
+
+    # method to calculate the accuracy of the model on the training set
+    def accuracy_on_train_set(self):
+        nn_predictions = self.classify_images([img for img,_ in self.data.training_set])
+        ground_truth = [cat for _,cat in self.data.training_set]
+
+        correct_classifications = 0
+        for i in range(len(self.data.training_set)):
+            if nn_predictions[i] == ground_truth[i]:
+                correct_classifications += 1
+        
+        return correct_classifications / len(self.data.training_set)
     
     # method to evaluate the NN model on the validation set.
     # returns the accuracy of the model on the validation set

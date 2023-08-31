@@ -7,6 +7,7 @@
 # partly from https://www.kaggle.com/code/milospuric/read-mnist-dataset/edit
 from src.utility.loader import *
 from src.neural_network.classifier.network import *
+from src.neural_network.classifier.cost_functions import *
 from os.path import join
 import numpy as np
 import matplotlib.pyplot as plt 
@@ -28,11 +29,11 @@ def main():
     # for NNs, we need to flatten the 28x28 image to a 1D numpy array of length 784
     nndata = Data((x_train, y_train),(x_validation, y_validation),(x_test, y_test), flatten_inputs=True)
 
-    # create a NN and train it
-    nn = NeuralNetwork([784,30,10],nndata)
-    number_of_epochs = 30
-    mini_batch_size = 20
-    eta = 0.001
+    # create a NN and train it - achieved 60% training and validation with this
+    nn = NeuralNetwork([784,30,10], nndata, cost_function=MeanSquaredError)
+    number_of_epochs = 100
+    mini_batch_size = 1250
+    eta = 0.25
     accuracies, cost_functions = nn.train(epochs=number_of_epochs, m=mini_batch_size, learning_rate=eta)
 
     # evaluate the model on the validation set
