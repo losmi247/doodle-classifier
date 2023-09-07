@@ -64,11 +64,17 @@ class Data:
     #
     # additionally, the MNIST images have pixel values from 0 to 255, so we first
     # normalise these values to the [0,1] range to be used by classifiers.
-    def __init__(self, training_set, validation_set, testing_set, flatten_inputs = False):
-        # normalise pixel values, and pair up inputs and ground truths
-        training_set = [(x/255.0,y) for x,y in zip(training_set[0],training_set[1])]
-        validation_set = [(x/255.0,y) for x,y in zip(validation_set[0],validation_set[1])]
-        testing_set = [(x/255.0,y) for x,y in zip(testing_set[0],testing_set[1])]
+    def __init__(self, training_set, validation_set, testing_set, normalise_inputs = False, flatten_inputs = False):
+        # pair up inputs and ground truths
+        training_set = [(x,y) for x,y in zip(training_set[0],training_set[1])]
+        validation_set = [(x,y) for x,y in zip(validation_set[0],validation_set[1])]
+        testing_set = [(x,y) for x,y in zip(testing_set[0],testing_set[1])]
+        
+        # normalise inputs to range [0,1] if needed
+        if normalise_inputs:
+            training_set = [(x/255.0,y) for x,y in training_set]
+            validation_set = [(x/255.0,y) for x,y in validation_set]
+            testing_set = [(x/255.0,y) for x,y in testing_set]
 
         # flatten inputs if needed
         if flatten_inputs:

@@ -92,6 +92,8 @@ class MeanSquaredError(CostFunction):
 # a(x) is the network's vector output for input a(x), and n
 # is the number of inputs in the train set.
 #
+#   TODO: fix the cross-entropy cross function
+#
 class CrossEntropy(CostFunction):
     # method to calculate the cost function on the train set
     @staticmethod
@@ -102,9 +104,6 @@ class CrossEntropy(CostFunction):
             # y is an integer, so we need to make a vector out of it first
             y_vector = np.zeros(neural_network.layer_sizes[-1])
             y_vector[y] = 1
-            
-            for h in a:
-                assert(h >= 0 and h <= 1)
 
             # subtract C(x) from the cost function so far
             c -= np.sum(np.nan_to_num(y*np.log(a) + (1-y)*np.log(1-a)))

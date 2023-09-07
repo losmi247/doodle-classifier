@@ -58,7 +58,7 @@ class NeuralNetwork:
 
         for i in range(epochs):
             # shuffle the training data before taking mini batches - removed for now
-            # random.shuffle(self.data.training_set)
+            random.shuffle(self.data.training_set)
             # make the mini batches - the last mini batch might be smaller than the rest if len(self.data.training_set)%m != 0
             mini_batches = [self.data.training_set[k*m:(k+1)*m] for k in range((len(self.data.training_set)+m-1)//m)]
 

@@ -84,7 +84,6 @@ class PositionedPixel(NBFeature):
 # static variables for the PositionedPixel class, i.e. 
 # a list of all possible features of this type
 PositionedPixel.all_features = np.empty(28*28*256, NBFeature)
-print(PositionedPixel.all_features.shape)
 for y in range(28):
     for x in range(28):
         for value in range(256):
