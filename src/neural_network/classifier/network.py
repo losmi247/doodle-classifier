@@ -9,7 +9,7 @@ from src.neural_network.classifier.cost_functions import *
 # can be applied to a numpy array
 def sigmoid(x):
     # clip the values to avoid overflow and vanishing gradients - removed for now
-    # x = np.clip(x, -500, 500)
+    x = np.clip(x, -200, 200)
     return 1.0 / (1.0 + np.exp(-x))
 
 # can be applied to a numpy array

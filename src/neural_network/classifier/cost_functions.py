@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 # can be applied to a numpy array
 def sigmoid(x):
     # clip the values to avoid overflow and vanishing gradients - removed for now
-    # x = np.clip(x, -500, 500)
+    x = np.clip(x, -200, 200)
     return 1.0 / (1.0 + np.exp(-x))
 
 # can be applied to a numpy array
@@ -59,8 +59,8 @@ class MeanSquaredError(CostFunction):
             y_vector = np.zeros(neural_network.layer_sizes[-1])
             y_vector[y] = 1
 
-            # add C(x) to the cost function so far
-            c += np.linalg.norm(y_vector-a)
+            # add C(x) = ||y(x)-a(x)||^2 to the cost function so far
+            c += np.linalg.norm(y_vector-a)**2
 
         c /= 2*len(neural_network.data.training_set)
 
@@ -101,12 +101,13 @@ class CrossEntropy(CostFunction):
         c = 0
         for x,y in neural_network.data.training_set:
             a = neural_network.feed_forward(x)
+
             # y is an integer, so we need to make a vector out of it first
             y_vector = np.zeros(neural_network.layer_sizes[-1])
             y_vector[y] = 1
 
             # subtract C(x) from the cost function so far
-            c -= np.sum(np.nan_to_num(y*np.log(a) + (1-y)*np.log(1-a)))
+            c -= np.sum(np.nan_to_num(y_vector*np.log(a) + (1-y_vector)*np.log(1-a)))
 
         c /= len(neural_network.data.training_set)
 

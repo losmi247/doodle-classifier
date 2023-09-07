@@ -32,8 +32,8 @@ def main():
     # create a NN and train it
     nn = NeuralNetwork([784,30,10], nndata, cost_function=MeanSquaredError)
     number_of_epochs = 30
-    mini_batch_size = 100
-    eta = 0.01
+    mini_batch_size = 17
+    eta = 0.00223
     accuracies, cost_functions = nn.train(epochs=number_of_epochs, m=mini_batch_size, learning_rate=eta)
 
     # evaluate the model on the validation set
