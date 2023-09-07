@@ -9,7 +9,7 @@ from src.neural_network.classifier.cost_functions import *
 # can be applied to a numpy array
 def sigmoid(x):
     # clip the values to avoid overflow and vanishing gradients - removed for now
-    # x = np.clip(x, -100, 100)
+    # x = np.clip(x, -500, 500)
     return 1.0 / (1.0 + np.exp(-x))
 
 # can be applied to a numpy array
@@ -51,16 +51,16 @@ class NeuralNetwork:
     #   Training Methods
     #
     
-    # method to train the neural network
-    def train(self, epochs = 30, m = 1250, learning_rate = 0.25):
+    # method to train the neural network - default arguments achieve 74% validation accuracy
+    def train(self, epochs = 30, m = 17, learning_rate = 0.00223):
         accuracies = []
         cost_functions = []
 
         for i in range(epochs):
-            # shuffle the training data before taking mini batches
-            random.shuffle(self.data.training_set)
-            # make the mini batches
-            mini_batches = [self.data.training_set[k*m:(k+1)*m] for k in range(len(self.data.training_set)//m)]
+            # shuffle the training data before taking mini batches - removed for now
+            # random.shuffle(self.data.training_set)
+            # make the mini batches - the last mini batch might be smaller than the rest if len(self.data.training_set)%m != 0
+            mini_batches = [self.data.training_set[k*m:(k+1)*m] for k in range((len(self.data.training_set)+m-1)//m)]
 
             for mini_batch in mini_batches:
                 self.process_mini_batch(mini_batch, learning_rate)
