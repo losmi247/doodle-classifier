@@ -30,10 +30,10 @@ def main():
     nndata = Data((x_train, y_train),(x_validation, y_validation),(x_test, y_test), normalise_inputs=True, flatten_inputs=True)
 
     # create a NN and train it
-    nn = NeuralNetwork([784,30,10], nndata, cost_function=MeanSquaredError)
-    number_of_epochs = 30
-    mini_batch_size = 17
-    eta = 0.00223
+    nn = NeuralNetwork([784,30,10], nndata, cost_function=CrossEntropy)
+    number_of_epochs = 100
+    mini_batch_size = 100
+    eta = 0.01
     accuracies, cost_functions = nn.train(epochs=number_of_epochs, m=mini_batch_size, learning_rate=eta)
 
     # evaluate the model on the validation set
@@ -48,7 +48,7 @@ def main():
     ax1.legend()
 
     # show an example from the validation set
-    ind = 2543
+    ind = 7800
     img = x_validation[ind]
     pred = nn.classify(img)
     print("Predicted: ", pred, ". True: ", y_validation[ind])

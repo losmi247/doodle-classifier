@@ -52,7 +52,7 @@ class NeuralNetwork:
     #
     
     # method to train the neural network - default arguments achieve 74% validation accuracy
-    def train(self, epochs = 30, m = 17, learning_rate = 0.00223):
+    def train(self, epochs = 30, m = 100, learning_rate = 0.01):
         accuracies = []
         cost_functions = []
 
@@ -108,7 +108,7 @@ class NeuralNetwork:
             if l == 0:
                 z[l] = np.dot(w,x)+b
             else:
-                z[l] = np.dot(w,z[l-1])+b
+                z[l] = np.dot(w,a[l-1])+b
             a[l] = sigmoid(z[l])
             l += 1
 
