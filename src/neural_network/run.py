@@ -5,12 +5,13 @@
 # to run it (from project root directory).
 #
 # partly from https://www.kaggle.com/code/milospuric/read-mnist-dataset/edit
-from src.utility.loader import *
-from src.neural_network.classifier.network import *
-from src.neural_network.classifier.cost_functions import *
 from os.path import join
 import numpy as np
 import matplotlib.pyplot as plt 
+
+from src.utility.loader import *
+from src.neural_network.classifier.network import *
+from src.neural_network.classifier.cost_functions import *
 
 #
 # Set file paths based on added MNIST Datasets
@@ -31,8 +32,8 @@ def main():
 
     # create a NN and train it
     nn = NeuralNetwork([784,30,10], nndata, cost_function=CrossEntropy)
-    number_of_epochs = 100
-    mini_batch_size = 100
+    number_of_epochs = 30
+    mini_batch_size = 50
     eta = 0.01
     accuracies, cost_functions = nn.train(epochs=number_of_epochs, m=mini_batch_size, learning_rate=eta)
 

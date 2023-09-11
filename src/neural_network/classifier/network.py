@@ -1,5 +1,7 @@
 import numpy as np
 import random
+import pickle
+
 from src.neural_network.classifier.cost_functions import *
 
 #
@@ -52,7 +54,7 @@ class NeuralNetwork:
     #
     
     # method to train the neural network - default arguments achieve 74% validation accuracy
-    def train(self, epochs = 30, m = 100, learning_rate = 0.01):
+    def train(self, epochs = 30, m = 50, learning_rate = 0.01):
         accuracies = []
         cost_functions = []
 
@@ -141,25 +143,6 @@ class NeuralNetwork:
         return nabla_weights_x, nabla_biases_x
     
     #
-    #   Classification Methods
-    #
-    
-    # method to classify a single image given either as a 28x28 numpy array
-    # or a 784-element 1D numpy array
-    def classify(self, image):
-        # flatten the numpy array in case it is a 28x28 array
-        x = image.flatten()
-        # take the max value position as the prediction
-        return np.argmax(self.feed_forward(x))
-
-    # method to classify a given list of images
-    def classify_images(self, images):
-        predictions = []
-        for image in images:
-            predictions.append(self.classify(image))
-        return predictions
-    
-    #
     #   Parameter Initialisation Methods
     #
     
@@ -181,45 +164,102 @@ class NeuralNetwork:
         self.weights = [np.random.randn(x,y) for x,y in zip(self.layer_sizes[1:],self.layer_sizes[:-1])]
 
     #
-    #   Evaluation methods
+    #   Evaluation methods (all have to create deployable models first)
     #
 
     # method to calculate the accuracy of the model on the training set
     def accuracy_on_train_set(self):
-        nn_predictions = self.classify_images([img for img,_ in self.data.training_set])
-        ground_truth = [cat for _,cat in self.data.training_set]
-
-        correct_classifications = 0
-        for i in range(len(self.data.training_set)):
-            if nn_predictions[i] == ground_truth[i]:
-                correct_classifications += 1
+        model = DeployableNetwork(self.weights, self.biases)
+        nn_predictions = model.classify_images([img for img,_ in self.data.training_set])
+        ground_truth = np.array([cat for _,cat in self.data.training_set])
         
-        return correct_classifications / len(self.data.training_set)
+        return np.sum(nn_predictions == ground_truth) / len(self.data.training_set)
     
     # method to evaluate the NN model on the validation set.
     # returns the accuracy of the model on the validation set
     def evaluate_on_validation_set(self):
-        nn_predictions = self.classify_images([img for img,_ in self.data.validation_set])
-        ground_truth = [cat for _,cat in self.data.validation_set]
+        model = DeployableNetwork(self.weights, self.biases)
+        nn_predictions = model.classify_images([img for img,_ in self.data.validation_set])
+        ground_truth = np.array([cat for _,cat in self.data.validation_set])
 
-        correct_classifications = 0
-        for i in range(len(self.data.validation_set)):
-            if nn_predictions[i] == ground_truth[i]:
-                correct_classifications += 1
-        
-        return correct_classifications / len(self.data.validation_set)
+        return np.sum(nn_predictions == ground_truth) / len(self.data.validation_set)
     
     # method to evaluate the NN model on the testing set.
     # returns the accuracy of the model on the testing set.
     # this method should be run only once to get the final
-    # accuracy of the model, and avoid overfitting.
+    # accuracy of the modeland avoid overfitting.
     def evaluate_on_test_set(self):
-        nn_predictions = self.classify_images([img for img,_ in self.data.testing_set])
-        ground_truth = [cat for _,cat in self.data.testing_set]
+        model = DeployableNetwork(self.weights, self.biases)
+        nn_predictions = model.classify_images([img for img,_ in self.data.testing_set])
+        ground_truth = np.array([cat for _,cat in self.data.testing_set])
 
-        correct_classifications = 0
-        for i in range(len(self.data.testing_set)):
-            if nn_predictions[i] == ground_truth[i]:
-                correct_classifications += 1
+        return np.sum(nn_predictions == ground_truth) / len(self.data.testing_set)
+    
+    #
+    #   Utility Methods
+    #
+    
+    # method to save the weights and biases of a trained neural network in a file
+    # with the given name in this classifier's 'trained_models' directory.
+    # only the weights and biases are saved.
+    def save_network(self, file_name):
+        with open("./src/neural_network/trained_models/"+file_name, "wb") as file:
+            file.write(self.pickle_network())
         
-        return correct_classifications / len(self.data.testing_set)
+    # method to serialise the network parameters
+    def pickle_network(self):
+        return pickle.dumps(
+            [pickle.dumps(w) for w in self.weights] + [pickle.dumps(b) for b in self.biases]
+        )
+    
+    # method to load the weights and biases from a file with the given name
+    # in this classifiers's 'trained_models' directory, and creates a new
+    # deployable neural network (see class DeployableNetwork) with those 
+    # parameters, and returns it
+    @staticmethod
+    def load_network(file_name):
+        with open("./src/neural_network/trained_models/"+file_name, "rb") as file:
+            # first unpickle the array of matrices and vectors
+            pickled_params = pickle.loads(file.read())
+            # then unpickle individual matrices and vectors
+            weights = [pickle.loads(w_pickled) for w_pickled in pickled_params[:len(pickled_params)//2]]
+            biases = [pickle.loads(b_pickled) for b_pickled in pickled_params[len(pickled_params)//2:]]
+            # create and return the deployable model
+            return DeployableNetwork(weights, biases)
+
+
+#
+#   Class for a deployable neural network, consisting of only
+#   weights and biases, without any data, cost functions or
+#   layer sizes.
+#
+class DeployableNetwork:
+    def __init__(self, weights, biases):
+        self.weights = weights
+        self.biases = biases
+        
+    #
+    #   Methods
+    #
+        
+    # method that feeds forwards an input a to get the network's output,
+    # and returns it as the result.
+    def feed_forward(self, a):
+        for w,b in zip(self.weights,self.biases):
+            a = sigmoid(np.dot(w,a) + b)
+        return a
+        
+    #
+    #   Classification Methods
+    #
+    
+    # method to classify a single image given either as a 28x28 numpy array
+    # or a 784-element 1D numpy array
+    def classify(self, image):
+        # flatten the numpy array in case it is a 28x28 array, and 
+        # take the max value position as the prediction
+        return np.argmax(self.feed_forward(image.flatten()))
+
+    # method to classify a given list of images
+    def classify_images(self, images):
+        return np.array([self.classify(image) for image in images])
