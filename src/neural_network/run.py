@@ -40,6 +40,9 @@ def main():
     # evaluate the model on the validation set
     print("Accuracy on validation set: ", nn.evaluate_on_validation_set())
     
+    # save the trained model's parameters
+    nn.save_network("network.txt")
+    
     # plot stuff
     fig, (ax1, ax2) = plt.subplots(1, 2)
 
@@ -49,9 +52,10 @@ def main():
     ax1.legend()
 
     # show an example from the validation set
-    ind = 7800
+    ind = 8534
     img = x_validation[ind]
-    pred = nn.classify(img)
+    # classify it using a deployable model made from the trained network
+    pred = (NeuralNetwork.load_network("network.txt")).classify(img)
     print("Predicted: ", pred, ". True: ", y_validation[ind])
     ax2.imshow(img, cmap=plt.cm.gray)
 
