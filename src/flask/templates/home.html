@@ -1,0 +1,171 @@
+<!-- parts from https://medium.com/analytics-vidhya/how-to-deploy-digit-recognition-model-into-drawing-app-6e59f82a199c 
+     and https://flask.palletsprojects.com/en/2.3.x/ -->
+<!doctype html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digits Classifier</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="row" style="padding: 0 !important; margin: 0 !important;">
+        <div class="column">
+            <div class="picker" style="height: 47%; margin-right: 2%;">
+                <h1>Choose a classifier:</h1>
+                <button class="picker_button clicked">Naive Bayes</button>
+                <button class="picker_button">Neural Network</button>
+            </div>
+            <div class="results" style="height: 47%; margin-right: 2%; margin-top: 2%;">
+                <h1>Prediction: {{ response }}</h1>
+                <p>Percentages: {{ percentages }}</p>
+            </div>
+        </div>
+        <div class="column" style="align-items: center; margin-left: 2%;">
+            <div class="row" style="width: 100%; text-align: center; padding-bottom: 0;">
+                <button class="canvas_button" id="clear">Clear</button>
+                <button class="canvas_button clicked" id="draw" onclick="draw()">Draw</button>
+                <button class="canvas_button" id="erase" onclick="erase()">Erase</button>
+            </div>
+            <div class="canvasContainer" style="align-items: center;">
+                <form id="canvasForm" action="/" method="POST" onsubmit="canvastoimage()">
+                    <div class="row" style="width: 100%;">
+                        <input type="hidden" id="canvasimg" name="canvasimg">
+                        <input type="hidden" id="canvasdata" name="canvasdata" value="{{ canvasdata }}">
+                        <canvas id="canvas" width="560" height="560"></canvas>
+                    </div>
+                    <div class="row">
+                        <div class="col d-flex justify-content-center">
+                            <button style="width: 280px; border-radius: 0px;" class="btn btn-success" id="send" type="submit">Detect Number</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* Canvas Drawing */
+        window.addEventListener('load', ()=>{
+            const canvas = document.querySelector('#canvas');
+            const context = canvas.getContext('2d');
+
+            const canvasdata = document.querySelector('#canvasdata').value;
+            if (canvasdata){
+                const image = new Image();
+                image.onload = ()=>{
+                    context.drawImage(image, 0, 0);
+                };
+                image.src = canvasdata;
+            } else {
+                context.fillStyle = "black";
+                context.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            let radius = 20;
+            let start = 0;
+            let end = Math.PI * 2;
+            let dragging = false;
+
+            context.lineWidth = radius * 2;
+            context.lineCap = 'round';
+
+            const putPoint = (e)=>{
+                if (dragging){
+                    context.fillStyle = "white";
+                    context.strokeStyle = "white";
+                    context.lineTo(e.offsetX, e.offsetY);
+                    context.stroke();
+                    context.beginPath();
+                    context.arc(e.offsetX, e.offsetY, radius, start, end);
+                    context.fill();
+                    context.beginPath();
+                    context.moveTo(e.offsetX, e.offsetY);
+                }
+            }
+
+            const engage = (e)=>{
+                dragging = true;
+                putPoint(e);
+            }
+
+            const disengage = ()=>{
+                dragging = false;
+                context.beginPath();
+            }
+
+            canvas.addEventListener('mousedown', engage);
+            canvas.addEventListener('mousemove', putPoint);
+            canvas.addEventListener('mouseup', disengage);
+            canvas.addEventListener('mouseup', ()=>{
+                canvastoimage();
+            });
+
+            const clear = document.querySelector('#clear');
+            clear.addEventListener('click', ()=>{
+                const canvas = document.querySelector('#canvas');
+                const context = canvas.getContext('2d');
+                context.filter = 'invert(0)';
+                context.fillStyle = "black";
+                context.fillRect(0, 0, canvas.width, canvas.height);
+                radius = 20;
+            });
+
+            // Draw
+            const draw = document.querySelector('#draw');
+            draw.addEventListener('click', ()=>{
+                const canvas = document.querySelector('#canvas');
+                const context = canvas.getContext('2d');
+                context.filter = 'invert(0)';
+                radius = 20;
+            });
+
+            // Erase
+            const erase = document.querySelector('#erase');
+            erase.addEventListener('click', ()=>{
+                const canvas = document.querySelector('#canvas');
+                const context = canvas.getContext('2d');
+                context.filter = 'invert(1)';
+                radius = 30;
+            });
+        });
+
+        /* Submit Canvas Changes */
+        const canvastoimage = ()=>{
+            const canvas = document.querySelector('#canvas');
+            document.getElementById('canvasimg').value = canvas.toDataURL();
+        };
+
+
+        /* The Clicked Canvas Button Turns Red */
+        const canvas_buttons = document.querySelectorAll('.canvas_button');
+        canvas_buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove the "clicked" class from all buttons
+                canvas_buttons.forEach(b => b.classList.remove('clicked'));
+
+                // Add the "clicked" class to the clicked button if needed
+                if (button.textContent != 'Clear'){
+                    button.classList.add('clicked');
+                }
+                else {
+                    document.getElementById('draw').classList.add('clicked');
+                }
+            });
+        });
+
+
+        /* The Clicked Picker Button Turns Red */
+        const picker_buttons = document.querySelectorAll('.picker_button');
+        picker_buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove the "clicked" class from all buttons
+                picker_buttons.forEach(b => b.classList.remove('clicked'));
+
+                // Add the "clicked" class to the clicked button if needed
+                button.classList.add('clicked');
+            });
+        });
+    </script>
+</body>

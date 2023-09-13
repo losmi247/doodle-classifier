@@ -250,7 +250,8 @@ class DeployableNetwork:
         return a
         
     #
-    #   Classification Methods
+    #   Classification Methods - the images must be given with pixels
+    #   in range [0,1] (normalised)
     #
     
     # method to classify a single image given either as a 28x28 numpy array

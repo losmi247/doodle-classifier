@@ -3,3 +3,5 @@ __pycache__
 
 # ide files
 .vscode/
+
+# flask instance folder
