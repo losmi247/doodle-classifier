@@ -10,6 +10,7 @@ import base64
 from flask import (
     Flask, render_template, request
 )
+import matplotlib.pyplot as plt
 
 from src.neural_network.classifier.network import NeuralNetwork
 
@@ -52,21 +53,17 @@ def create_app(test_config=None):
 
         # Decode base64 image to python array
         nparr = np.fromstring(base64.b64decode(encoded_data), np.uint8)
-        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-
-        # Convert 3 channel image (RGB) to 1 channel image (GRAY)
-        gray_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        gray_image = cv2.imdecode(nparr, cv2.IMREAD_GRAYSCALE)
 
         # Resize to (28, 28)
-        gray_image = cv2.resize(gray_image, (28, 28), interpolation=cv2.INTER_LINEAR)
+        gray_image = cv2.resize(gray_image, (28, 28), interpolation=cv2.INTER_NEAREST)
+        # show the downsampled image
+        plt.imshow(gray_image, cmap='gray')
+        plt.show()
 
         # turn it into a numpy array, and normalise pixel values
         image = np.array(gray_image / 255.0)
         print(image)
-        
-        from PIL import Image
-        myimg = Image.fromarray(np.uint8(image * 255.0), 'L')
-        myimg.show()
 
         try:
             # take the output from the NN model
@@ -77,7 +74,8 @@ def create_app(test_config=None):
             # calculate probabilities for each digit, sorted in decreasing order
             output = list(zip(np.around((output / np.sum(output)) * 100.0, decimals=2),np.arange(10)))
             output.sort(key = lambda x: -x[0])
-            percentages = "\n".join([str(digit)+': {:.2f}'.format(p)+"%" for p,digit in output])
+            #percentages = "\n".join([str(digit)+': {:.2f}'.format(p)+"%" for p,digit in output])
+            percentages = [str(digit)+': {:.2f}'.format(p)+"%" for p,digit in output]
 
             print(f"Prediction Result : {str(prediction)}")
             return render_template('/home.html', response=str(prediction), percentages=percentages, canvasdata=canvasdata)

@@ -19,7 +19,19 @@
             </div>
             <div class="results" style="height: 47%; margin-right: 2%; margin-top: 2%;">
                 <h1>Prediction: {{ response }}</h1>
-                <p>Percentages: {{ percentages }}</p>
+                <p>
+                    Percentages:
+                    <br>
+                    <br>
+                    {% for item in percentages %}
+                        {% if loop.index0 == 0 %}
+                            <b> {{ item }} </b>
+                        {% else %}
+                            {{ item }}
+                        {% endif %}
+                        <br>
+                    {% endfor %}
+                </p>
             </div>
         </div>
         <div class="column" style="align-items: center; margin-left: 2%;">
@@ -33,7 +45,7 @@
                     <div class="row" style="width: 100%;">
                         <input type="hidden" id="canvasimg" name="canvasimg">
                         <input type="hidden" id="canvasdata" name="canvasdata" value="{{ canvasdata }}">
-                        <canvas id="canvas" width="560" height="560"></canvas>
+                        <canvas id="canvas" width="840" height="840"></canvas>
                     </div>
                     <div class="row">
                         <div class="col d-flex justify-content-center">
@@ -63,7 +75,7 @@
                 context.fillRect(0, 0, canvas.width, canvas.height);
             }
 
-            let radius = 20;
+            let radius = 25;
             let start = 0;
             let end = Math.PI * 2;
             let dragging = false;
@@ -109,7 +121,7 @@
                 context.filter = 'invert(0)';
                 context.fillStyle = "black";
                 context.fillRect(0, 0, canvas.width, canvas.height);
-                radius = 20;
+                radius = 25;
             });
 
             // Draw
@@ -118,7 +130,7 @@
                 const canvas = document.querySelector('#canvas');
                 const context = canvas.getContext('2d');
                 context.filter = 'invert(0)';
-                radius = 20;
+                radius = 25;
             });
 
             // Erase
@@ -127,7 +139,7 @@
                 const canvas = document.querySelector('#canvas');
                 const context = canvas.getContext('2d');
                 context.filter = 'invert(1)';
-                radius = 30;
+                radius = 50;
             });
         });
 
