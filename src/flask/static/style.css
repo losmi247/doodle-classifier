@@ -35,6 +35,17 @@ body {
     padding: 1rem;  
 }
 
+/* display for the preprocessed image */
+.processed_image_container {
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-size: larger;
+    margin: 0 auto; 
+    background: rgb(125, 166, 243);
+    border-style: solid;
+    border-color: black;
+    border-radius: 7mm;
+    padding: 1rem;  
+}
 
 /* the drawing canvas */
 canvas {
@@ -52,9 +63,16 @@ canvas {
 
 .column {
     text-align: center;
-    height: calc(100vh - 2cm);
+    height: calc(100vh - 3cm);
     float: left;
     width: 48%;
+}
+
+.internal_column {
+    text-align: center;
+    float: left;
+    width: 50%;
+    height: 100%;
 }
 
 

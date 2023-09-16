@@ -9,49 +9,68 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
-<body>
+<body onload="load_processed_image();">
     <div class="row" style="padding: 0 !important; margin: 0 !important;">
-        <div class="column">
-            <div class="picker" style="height: 47%; margin-right: 2%;">
+        <div class="column" style="margin-right: 2%;">
+            <div class="picker" style="height: 25%;">
                 <h1>Choose a classifier:</h1>
                 <button class="picker_button clicked">Naive Bayes</button>
                 <button class="picker_button">Neural Network</button>
             </div>
-            <div class="results" style="height: 47%; margin-right: 2%; margin-top: 2%;">
-                <h1>Prediction: {{ response }}</h1>
-                <p>
-                    Percentages:
-                    <br>
-                    <br>
-                    {% for item in percentages %}
-                        {% if loop.index0 == 0 %}
-                            <b> {{ item }} </b>
-                        {% else %}
-                            {{ item }}
-                        {% endif %}
-                        <br>
-                    {% endfor %}
-                </p>
+            <div style="height: 73%; margin-top: 2%">
+                <div class="internal_column" style="align-items: center">
+                    <div class="processed_image_container" style="height: 100%; margin-right: 2%;">
+                        <h1>Preprocessed Image:</h1>
+                        <img id="processed_image" src="{{ processed_image }}">
+                    </div>
+                </div>
+                <div class="internal_column" >
+                    <div class="results" style="height: 100%; margin-left: 2%;">
+                        <h1>Prediction: <span style="color:gold"> {{ response }} </span> </h1>
+                        <p>
+                            Percentages:
+                            <br>
+                            <br>
+                            {% for item in percentages %}
+                                {% if loop.index0 == 0 %}
+                                    <b> <span style="color:gold"> {{ item }} </span> </b>
+                                {% elif loop.index0 == 1 %}
+                                    <b> <span style="color:#C0C0C0"> {{ item }} </span> </b>
+                                {% elif loop.index0 == 2 %}
+                                    <b> <span style="color:#CD7F32"> {{ item }} </span> </b>
+                                {% else %}
+                                    {{item}}
+                                {% endif %}
+                                <br>
+                            {% endfor %}
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="column" style="align-items: center; margin-left: 2%;">
-            <div class="row" style="width: 100%; text-align: center; padding-bottom: 0;">
+            <div class="row" style="width: 100%; text-align: center; padding-bottom: 0; padding-top: 1%;">
                 <button class="canvas_button" id="clear">Clear</button>
-                <button class="canvas_button clicked" id="draw" onclick="draw()">Draw</button>
-                <button class="canvas_button" id="erase" onclick="erase()">Erase</button>
+                <button class="canvas_button" id="draw">Draw</button>
+                <button class="canvas_button" id="erase">Erase</button>
             </div>
-            <div class="canvasContainer" style="align-items: center;">
-                <form id="canvasForm" action="/" method="POST" onsubmit="canvastoimage()">
+            <div class="canvasContainer" style="align-items: center; padding-top: 0; margin-top: 0">
+                <form id="canvasForm" action="/" method="POST">
                     <div class="row" style="width: 100%;">
                         <input type="hidden" id="canvasimg" name="canvasimg">
                         <input type="hidden" id="canvasdata" name="canvasdata" value="{{ canvasdata }}">
-                        <canvas id="canvas" width="840" height="840"></canvas>
+                        <canvas id="canvas" width="830" height="830" value="{{ canvasdata }}"></canvas>
+
+                        <!-- input for keeping track of which button was clicked last -->
+                        <input type="hidden" id="last_button_clicked" name="last_button_clicked" value={{lastbuttonclicked}}>
                     </div>
-                    <div class="row">
+                    <!-- button for submitting the form 
+                    <div class="row" style="padding-top: 0; margin-top: 0">
                         <div class="col d-flex justify-content-center">
                             <button style="width: 280px; border-radius: 0px;" class="btn btn-success" id="send" type="submit">Detect Number</button>
                         </div>
                     </div>
+                    -->
                 </form>
             </div>
         </div>
@@ -75,7 +94,7 @@
                 context.fillRect(0, 0, canvas.width, canvas.height);
             }
 
-            let radius = 25;
+            let radius = 36;
             let start = 0;
             let end = Math.PI * 2;
             let dragging = false;
@@ -85,8 +104,6 @@
 
             const putPoint = (e)=>{
                 if (dragging){
-                    context.fillStyle = "white";
-                    context.strokeStyle = "white";
                     context.lineTo(e.offsetX, e.offsetY);
                     context.stroke();
                     context.beginPath();
@@ -110,18 +127,22 @@
             canvas.addEventListener('mousedown', engage);
             canvas.addEventListener('mousemove', putPoint);
             canvas.addEventListener('mouseup', disengage);
-            canvas.addEventListener('mouseup', ()=>{
-                canvastoimage();
-            });
 
             const clear = document.querySelector('#clear');
             clear.addEventListener('click', ()=>{
                 const canvas = document.querySelector('#canvas');
                 const context = canvas.getContext('2d');
-                context.filter = 'invert(0)';
                 context.fillStyle = "black";
                 context.fillRect(0, 0, canvas.width, canvas.height);
-                radius = 25;
+                radius = 36;
+
+                /// make the draw button red after refresh, i.e. last clicked
+                document.getElementById('last_button_clicked').value ='draw';
+                
+                // update the canvasimg input
+                canvastoimage(); 
+                // submit the form programmatically to update classification
+                document.getElementById('canvasForm').submit(); 
             });
 
             // Draw
@@ -129,8 +150,11 @@
             draw.addEventListener('click', ()=>{
                 const canvas = document.querySelector('#canvas');
                 const context = canvas.getContext('2d');
-                context.filter = 'invert(0)';
-                radius = 25;
+                context.fillStyle = "white";
+                context.strokeStyle = "white";
+                radius = 36;
+
+                document.getElementById('last_button_clicked').value = 'draw';
             });
 
             // Erase
@@ -138,13 +162,36 @@
             erase.addEventListener('click', ()=>{
                 const canvas = document.querySelector('#canvas');
                 const context = canvas.getContext('2d');
-                context.filter = 'invert(1)';
-                radius = 50;
+                context.fillStyle = "black";
+                context.strokeStyle = "black";
+                radius = 40;
+
+                document.getElementById('last_button_clicked').value = 'erase';
             });
+
+
+            // make a 'POST' request when the mouse is lifted
+            canvas.addEventListener('mouseup', () => {
+                // update the canvasimg input
+                canvastoimage(); 
+                // submit the form programmatically
+                document.getElementById('canvasForm').submit(); 
+            });
+
+            
+            /* Initialise the button colors properly */
+            lastbuttonclicked = document.getElementById('last_button_clicked').value;
+            if (lastbuttonclicked == 'draw') {
+                document.getElementById('draw').click();
+            }
+            else{
+                document.getElementById('erase').click();
+            }
         });
 
         /* Submit Canvas Changes */
         const canvastoimage = ()=>{
+            /// update the drawn canvas image
             const canvas = document.querySelector('#canvas');
             document.getElementById('canvasimg').value = canvas.toDataURL();
         };

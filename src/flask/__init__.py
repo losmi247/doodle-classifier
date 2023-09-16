@@ -42,7 +42,7 @@ def create_app(test_config=None):
     # Handle GET request
     @app.route('/', methods=['GET'])
     def drawing():
-        return render_template('/home.html')
+        return render_template('/home.html', lastbuttonclicked='draw')
 
     # Handle POST request
     @app.route('/', methods=['POST'])
@@ -55,19 +55,15 @@ def create_app(test_config=None):
         nparr = np.fromstring(base64.b64decode(encoded_data), np.uint8)
         gray_image = cv2.imdecode(nparr, cv2.IMREAD_GRAYSCALE)
 
-        # Resize to (28, 28)
-        gray_image = cv2.resize(gray_image, (28, 28), interpolation=cv2.INTER_NEAREST)
-        # show the downsampled image
-        plt.imshow(gray_image, cmap='gray')
-        plt.show()
-
+        # Resize to (28, 28) - the downsampled image
+        gray_image = cv2.resize(gray_image, (28, 28), interpolation=cv2.INTER_AREA)
+        
         # turn it into a numpy array, and normalise pixel values
-        image = np.array(gray_image / 255.0)
-        print(image)
+        preprocessed_image = np.array(gray_image / 255.0)
 
         try:
             # take the output from the NN model
-            output = nn_model.feed_forward(image.flatten())
+            output = nn_model.feed_forward(preprocessed_image.flatten())
             # get the maximum as the prediction
             prediction = np.argmax(output)
 
@@ -76,11 +72,28 @@ def create_app(test_config=None):
             output.sort(key = lambda x: -x[0])
             #percentages = "\n".join([str(digit)+': {:.2f}'.format(p)+"%" for p,digit in output])
             percentages = [str(digit)+': {:.2f}'.format(p)+"%" for p,digit in output]
+            
+            # upscale the 28x28 image to display it
+            output_size = 336
+            scale = output_size // 28
+            output_image = np.zeros((output_size, output_size), dtype=gray_image.dtype)
+            # duplicate pixels to upscale
+            for i in range(gray_image.shape[0]):
+                for j in range(gray_image.shape[1]):
+                    output_image[i*scale:(i+1)*scale, j*scale:(j+1)*scale] = gray_image[i, j]     
+            # convert the downsampled image to a base64 data URL
+            _, buffer = cv2.imencode('.png', output_image)
+            downsampled_data_url = 'data:image/png;base64,' + base64.b64encode(buffer).decode()
+            
+            # remember which button was last clicked (excluding clear)
+            lastbuttonclicked = request.form['last_button_clicked']
 
             print(f"Prediction Result : {str(prediction)}")
-            return render_template('/home.html', response=str(prediction), percentages=percentages, canvasdata=canvasdata)
+            return render_template('/home.html', response=str(prediction), percentages=percentages, canvasdata=canvasdata, \
+                processed_image=downsampled_data_url, lastbuttonclicked=lastbuttonclicked)
         except Exception as e:
-            return render_template('/home.html', response=str(e), percentages=percentages, canvasdata=canvasdata)
+            return render_template('/home.html', response=str(e), percentages=percentages, canvasdata=canvasdata, \
+                processed_image=None, lastbuttonclicked='draw')
 
         #return render_template('/home.html') - find a way to force reclassification after canvas is updated
 
