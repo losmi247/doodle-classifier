@@ -25,7 +25,7 @@ def sigmoid_prime(x):
 #
 class NeuralNetwork:
     # constructor from an array of sizes of layers
-    def __init__(self, layer_sizes, data, cost_function = MeanSquaredError):
+    def __init__(self, layer_sizes, data, categories, cost_function = MeanSquaredError):
         self.number_of_layers = len(layer_sizes)
         self.layer_sizes = layer_sizes
 
@@ -34,9 +34,17 @@ class NeuralNetwork:
 
         # the data
         self.data = data
+        
+        # set the categories to classify the input into.
+        # the given categories list/array must be exactly 
+        # of same size as the output (last) layer of the network.
+        if len(categories) != layer_sizes[-1]:
+            raise Exception("Number of categories and output layer size do not match.")
+        self.categories = categories
 
         # set the cost function used
         self.cost_function = cost_function
+        
         
     #
     #   Methods
@@ -169,7 +177,7 @@ class NeuralNetwork:
 
     # method to calculate the accuracy of the model on the training set
     def accuracy_on_train_set(self):
-        model = DeployableNetwork(self.weights, self.biases)
+        model = DeployableNetwork(self.weights, self.biases, self.categories)
         nn_predictions = model.classify_images([img for img,_ in self.data.training_set])
         ground_truth = np.array([cat for _,cat in self.data.training_set])
         
@@ -178,7 +186,7 @@ class NeuralNetwork:
     # method to evaluate the NN model on the validation set.
     # returns the accuracy of the model on the validation set
     def evaluate_on_validation_set(self):
-        model = DeployableNetwork(self.weights, self.biases)
+        model = DeployableNetwork(self.weights, self.biases, self.categories)
         nn_predictions = model.classify_images([img for img,_ in self.data.validation_set])
         ground_truth = np.array([cat for _,cat in self.data.validation_set])
 
@@ -189,7 +197,7 @@ class NeuralNetwork:
     # this method should be run only once to get the final
     # accuracy of the modeland avoid overfitting.
     def evaluate_on_test_set(self):
-        model = DeployableNetwork(self.weights, self.biases)
+        model = DeployableNetwork(self.weights, self.biases, self.categories)
         nn_predictions = model.classify_images([img for img,_ in self.data.testing_set])
         ground_truth = np.array([cat for _,cat in self.data.testing_set])
 
@@ -201,16 +209,14 @@ class NeuralNetwork:
     
     # method to save the weights and biases of a trained neural network in a file
     # with the given name in this classifier's 'trained_models' directory.
-    # only the weights and biases are saved.
+    # only the weights, biases, and categories are saved.
     def save_network(self, file_name):
         with open("./src/neural_network/trained_models/"+file_name, "wb") as file:
             file.write(self.pickle_network())
         
-    # method to serialise the network parameters
+    # method to serialise the network parameters (weights and biases), and categories
     def pickle_network(self):
-        return pickle.dumps(
-            [pickle.dumps(w) for w in self.weights] + [pickle.dumps(b) for b in self.biases]
-        )
+        return pickle.dumps((pickle.dumps(self.weights), pickle.dumps(self.biases), pickle.dumps(self.categories)))
     
     # method to load the weights and biases from a file with the given name
     # in this classifiers's 'trained_models' directory, and create a new
@@ -221,11 +227,12 @@ class NeuralNetwork:
         with open("./src/neural_network/trained_models/"+file_name, "rb") as file:
             # first unpickle the array of matrices and vectors
             pickled_params = pickle.loads(file.read())
-            # then unpickle individual matrices and vectors
-            weights = [pickle.loads(w_pickled) for w_pickled in pickled_params[:len(pickled_params)//2]]
-            biases = [pickle.loads(b_pickled) for b_pickled in pickled_params[len(pickled_params)//2:]]
+            # then unpickle individual matrices and vectors, and categories
+            weights = pickle.loads(pickled_params[0])
+            biases = pickle.loads(pickled_params[1])
+            categories = pickle.loads(pickled_params[2])
             # create and return the deployable model
-            return DeployableNetwork(weights, biases)
+            return DeployableNetwork(weights, biases, categories)
 
 
 #
@@ -234,9 +241,10 @@ class NeuralNetwork:
 #   layer sizes.
 #
 class DeployableNetwork:
-    def __init__(self, weights, biases):
+    def __init__(self, weights, biases, categories):
         self.weights = weights
         self.biases = biases
+        self.categories = categories
         
     #
     #   Methods
@@ -258,8 +266,8 @@ class DeployableNetwork:
     # or a 784-element 1D numpy array
     def classify(self, image):
         # flatten the numpy array in case it is a 28x28 array, and 
-        # take the max value position as the prediction
-        return np.argmax(self.feed_forward(image.flatten()))
+        # take the max value as the prediction
+        return self.categories[np.argmax(self.feed_forward(image.flatten()))]
 
     # method to classify a given list of images
     def classify_images(self, images):

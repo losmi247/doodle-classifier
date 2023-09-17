@@ -16,7 +16,7 @@ test_labels_filepath = join(input_path, 't10k-labels-idx1-ubyte/t10k-labels-idx1
 class Testing(unittest.TestCase):
     # NeuralNetwork constructor
     def test_network_constructor(self):
-        network = NeuralNetwork([784,30,10],None)
+        network = NeuralNetwork([784,30,10],None,categories=np.arange(10),cost_function=MeanSquaredError)
         
         x = network.weights[0]
         self.assertEquals(x.shape[0], 30)
@@ -31,6 +31,10 @@ class Testing(unittest.TestCase):
         
         x = network.biases[1]
         self.assertEquals(x.shape[0], 10)
+        
+        
+        x = network.categories[6]
+        self.assertEquals(x, 6)
     
     # train
     def test_train(self):
@@ -42,7 +46,7 @@ class Testing(unittest.TestCase):
         nndata = Data((x_train, y_train),(x_validation, y_validation),(x_test, y_test), normalise_inputs=True, flatten_inputs=True)
 
         # create a NN and train it
-        nn = NeuralNetwork([784,30,10], nndata, cost_function=CrossEntropy)
+        nn = NeuralNetwork([784,30,10], nndata, categories=np.arange(10), cost_function=CrossEntropy)
         number_of_epochs = 5
         mini_batch_size = 50
         eta = 0.01
@@ -73,7 +77,7 @@ class Testing(unittest.TestCase):
         # for NNs, we need to flatten the 28x28 image to a 1D numpy array of length 784
         nndata = Data((x_train, y_train),(x_validation, y_validation),(x_test, y_test), normalise_inputs=True, flatten_inputs=True)
         
-        nn = NeuralNetwork([784,30,10], nndata, cost_function=CrossEntropy)
+        nn = NeuralNetwork([784,30,10], nndata, categories=np.arange(10), cost_function=CrossEntropy)
         number_of_epochs = 5
         mini_batch_size = 50
         eta = 0.01

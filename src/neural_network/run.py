@@ -31,7 +31,7 @@ def main():
     nndata = Data((x_train, y_train),(x_validation, y_validation),(x_test, y_test), normalise_inputs=True, flatten_inputs=True)
 
     # create a NN and train it
-    nn = NeuralNetwork([784,30,10], nndata, cost_function=CrossEntropy)
+    nn = NeuralNetwork([784,30,10], nndata, np.arange(10), cost_function=CrossEntropy)
     number_of_epochs = 30
     mini_batch_size = 50
     eta = 0.01

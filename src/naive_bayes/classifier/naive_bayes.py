@@ -256,15 +256,8 @@ class DeployableNaiveBayes:
     def classify(self, image):
         # get probabilities of image belonging to each class
         probabilities = self.get_probabilities(image)
-        max_probability = -1000000000
-        prediction = -1
-        for i in range(len(probabilities)):
-            if probabilities[i] > max_probability:
-                max_probability = probabilities[i]
-                prediction = self.categories[i]
-                
-        return prediction
-            
+        # take the category with max probability as the prediction
+        return self.categories[np.argmax(probabilities)]
     
     # method to classify a given list of images
     def classify_images(self, images):
