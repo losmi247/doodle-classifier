@@ -95,6 +95,22 @@ class Testing(unittest.TestCase):
         # assert that the biases remain the same
         for b_dep,b_orig in zip(deployable_network.biases, nn.biases):
             self.assertTrue((b_dep==b_orig).all())
+
+    # save_network, load_network
+    def test_save_and_load_network_accuracy(self):
+        # load data
+        mnist_dataloader = MnistDataloader(training_images_filepath, training_labels_filepath, test_images_filepath, test_labels_filepath)
+        # (images, labels)
+        (x_train, y_train), (x_validation, y_validation), (x_test, y_test) = mnist_dataloader.load_data()
+        # for NNs, we need to flatten the 28x28 image to a 1D numpy array of length 784
+        nndata = Data((x_train, y_train),(x_validation, y_validation),(x_test, y_test), normalise_inputs=True, flatten_inputs=True)
+
+        # load the network, get the deployable network
+        deployable_network = NeuralNetwork.load_network("network.txt")
+
+        # assert that the accuracy on training and validation sets are at least 90%
+        self.assertTrue(deployable_network.evaluate_on_dataset(nndata.training_set) >= 0.91)
+        self.assertTrue(deployable_network.evaluate_on_dataset(nndata.validation_set) >= 0.92)
         
 
 if __name__ == '__main__':

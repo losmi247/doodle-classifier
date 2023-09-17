@@ -34,9 +34,12 @@ def main():
     # achieves 84% validation accuracy
     print("Accuracy on validation set: ", nb_classifier.evaluate_on_validation_set())
     
+    # save the trained model's parameters
+    nb_classifier.save_nb("bayes.txt")
+    
     ind = 101
     img = x_validation[ind]
-    pred = nb_classifier.classify(img)
+    pred = (DeployableNaiveBayes(nb_classifier.log_priors, nb_classifier.log_likelihoods, nb_classifier.categories).classify(img))
     print("Predicted: ", pred, ". True: ", y_validation[ind])
     plt.imshow(img, cmap=plt.cm.gray)
     plt.show()

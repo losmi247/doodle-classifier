@@ -213,7 +213,7 @@ class NeuralNetwork:
         )
     
     # method to load the weights and biases from a file with the given name
-    # in this classifiers's 'trained_models' directory, and creates a new
+    # in this classifiers's 'trained_models' directory, and create a new
     # deployable neural network (see class DeployableNetwork) with those 
     # parameters, and returns it
     @staticmethod
@@ -264,3 +264,16 @@ class DeployableNetwork:
     # method to classify a given list of images
     def classify_images(self, images):
         return np.array([self.classify(image) for image in images])
+    
+    
+    #
+    #   Evaluation Methods 
+    #
+
+    # method to evaluate the deployable NN model on the given dataset.
+    # returns the accuracy of the model on the given dataset.
+    def evaluate_on_dataset(self, dataset):
+        nn_predictions = self.classify_images([img for img,_ in dataset])
+        ground_truth = np.array([cat for _,cat in dataset])
+
+        return np.sum(nn_predictions == ground_truth) / len(dataset)

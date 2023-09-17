@@ -36,10 +36,13 @@ class NBFeature(ABC):
     # extensions of this abstract base class.
     #
     # all implemented feature types must have a all_features static field
-    # that contains a numpy array of all different features of that type.
+    # that contains a numpy array that contains all different features of that type.
+    #
+    # returns a numpy array of numpy arrays each of which contains
+    # all different features of one type, and a tag saying which type of feature that is.
     @staticmethod
     def get_all_features():
-        return np.concatenate([feature_class.all_features for feature_class in NBFeature.all_feature_classes])
+        return np.array([np.insert(feature_class.all_features,0,feature_class) for feature_class in NBFeature.all_feature_classes])
     
     # method to extract all existing features in a given image.
     #
@@ -74,18 +77,25 @@ class PositionedPixel(NBFeature):
                     feature_frequency[feature] += 1
         return feature_frequency
     
-    # method to encode a feature as a unique number in range 0 to 28*28*256-1
+    # method to encode a feature of type PositionedPixel as a unique number in range 0 to 28*28*256-1
+    #
+    # contract: if encode_feature(f1) == encode_feature(f2) for two features f1 and f2 of same type,
+    # then f1 and f2 have the same values of all fields. 
     @staticmethod
-    def encode_feature(x, y, value):
-        return y*28*256+x*256+value
+    def encode_feature(feature):
+        return feature.y*28*256 + feature.x*256 + feature.value
     
     # method to return a feature object with the given value and position
     @staticmethod
     def get_feature(x, y, value):
-        return PositionedPixel.all_features[PositionedPixel.encode_feature(x, y, value)]
+        return PositionedPixel.all_features[PositionedPixel.encode_feature(PositionedPixel(x, y, value))]
     
     # method to extract all existing PositionedPixel features
     # from the given image, in numpy array.
+    #
+    # all implementations of NBFeature must have a 'extract_features' method
+    # that extracts all features from the array of all features of this type
+    # (all_features) that appear in this given image.
     @staticmethod
     def extract_features(image):
         features = np.empty(28*28, NBFeature)
@@ -99,12 +109,22 @@ class PositionedPixel(NBFeature):
 #
 
 # a numpy array of all possible features of this type
+#
+# all implementations of a NBFeature must have a static variable 'all_features'
+# that is a numpy array of objects that represent each possible feature of that type.
+#
+# in addition, each implementation of NBFeature must have a function 'encode_feature(...)'
+# that, given the values that uniquely define one feature of that type, returns its unique
+# index (where it should be stored) in the 'all_features' array. also the 'get_feature'
+# function that gets the feature with given values that define it (from the 'all_features'
+# array).
 PositionedPixel.all_features = np.empty(28*28*256, NBFeature)
 for y in range(28):
     for x in range(28):
         for value in range(256):
-            PositionedPixel.all_features[PositionedPixel.encode_feature(x, y, value)] \
-                    = PositionedPixel(x, y, value)
+            feature_object = PositionedPixel(x, y, value)
+            PositionedPixel.all_features[PositionedPixel.encode_feature(feature_object)] \
+                    = feature_object
 
           
 #
