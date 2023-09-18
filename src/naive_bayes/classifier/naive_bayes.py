@@ -109,7 +109,7 @@ class NaiveBayesClassifier:
 
     # method to evaluate the NB model on the training set.
     # returns the accuracy of the model on the training set
-    def evaluate_on_validation_set(self):
+    def evaluate_on_training_set(self):
         model = DeployableNaiveBayes(self.log_priors, self.log_likelihoods, self.categories)
         nb_predictions = model.classify_images([img for img,_ in self.data.training_set])
         ground_truth = np.array([cat for _,cat in self.data.training_set])
@@ -185,26 +185,6 @@ class NaiveBayesClassifier:
                 
                 # use the old feature instead of the new one
                 log_likelihoods[old_feature, category] = value
-            
-            """
-            # update the 'all_features' static variable of each feature class so that
-            # it contains the new objects that have been created by unpickling log_likelihoods.
-            for (new_feature_object,category),_ in log_likelihoods.items():
-                # each feature will be associated with each category, so we just go through one category
-                if category != categories[0]:
-                    continue
-                
-                # find which type of feature it is
-                feature_type_class = None
-                for feature_class in NBFeature.all_feature_classes:
-                    if isinstance(new_feature_object, feature_class):
-                        feature_type_class = feature_class
-                
-                # find the index of this feature in its class's 'all_features' array
-                feature_index = feature_type_class.encode_feature(new_feature_object)
-                # update the 'all_features' array with the new feature object
-                feature_type_class.all_features[feature_index] = new_feature_object
-            """
  
             # create and return the deployable model
             return DeployableNaiveBayes(log_priors, log_likelihoods, categories)
