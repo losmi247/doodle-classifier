@@ -10,7 +10,6 @@ import base64
 from flask import (
     Flask, render_template, request
 )
-import matplotlib.pyplot as plt
 
 from src.neural_network.classifier.network import NeuralNetwork
 from src.naive_bayes.classifier.naive_bayes import NaiveBayesClassifier
