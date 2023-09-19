@@ -16,7 +16,7 @@ test_labels_filepath = join(input_path, 't10k-labels-idx1-ubyte/t10k-labels-idx1
 class Testing(unittest.TestCase):
     # NeuralNetwork constructor
     def test_network_constructor(self):
-        network = NeuralNetwork([784,30,10],None,categories=np.arange(10),cost_function=MeanSquaredError)
+        network = NeuralNetwork([784,30,10],None,categories=np.arange(10),cost_function=MeanSquaredError,lmbda=1)
         
         x = network.weights[0]
         self.assertEquals(x.shape[0], 30)
@@ -35,6 +35,8 @@ class Testing(unittest.TestCase):
         
         x = network.categories[6]
         self.assertEquals(x, 6)
+        
+        self.assertEquals(network.lmbda, 1)
     
     # train
     def test_train(self):
@@ -46,7 +48,7 @@ class Testing(unittest.TestCase):
         nndata = Data((x_train, y_train),(x_validation, y_validation),(x_test, y_test), normalise_inputs=True, flatten_inputs=True)
 
         # create a NN and train it
-        nn = NeuralNetwork([784,30,10], nndata, categories=np.arange(10), cost_function=CrossEntropy)
+        nn = NeuralNetwork([784,30,10], nndata, categories=np.arange(10), cost_function=CrossEntropy, lmbda=0.1)
         number_of_epochs = 5
         mini_batch_size = 50
         eta = 0.01
@@ -77,7 +79,7 @@ class Testing(unittest.TestCase):
         # for NNs, we need to flatten the 28x28 image to a 1D numpy array of length 784
         nndata = Data((x_train, y_train),(x_validation, y_validation),(x_test, y_test), normalise_inputs=True, flatten_inputs=True)
         
-        nn = NeuralNetwork([784,30,10], nndata, categories=np.arange(10), cost_function=CrossEntropy)
+        nn = NeuralNetwork([784,30,10], nndata, categories=np.arange(10), cost_function=CrossEntropy, lmbda=0.1)
         number_of_epochs = 5
         mini_batch_size = 50
         eta = 0.01
@@ -113,8 +115,8 @@ class Testing(unittest.TestCase):
         deployable_network = NeuralNetwork.load_network("network.txt")
 
         # assert that the accuracy on training and validation sets are at least 90%
-        self.assertTrue(deployable_network.evaluate_on_dataset(nndata.training_set) >= 0.91)
-        self.assertTrue(deployable_network.evaluate_on_dataset(nndata.validation_set) >= 0.92)
+        self.assertTrue(deployable_network.evaluate_on_dataset(nndata.training_set) >= 0.93)
+        self.assertTrue(deployable_network.evaluate_on_dataset(nndata.validation_set) >= 0.93)
         
 
 if __name__ == '__main__':

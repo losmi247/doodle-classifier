@@ -24,8 +24,8 @@ def sigmoid_prime(x):
 # of perceptrons.
 #
 class NeuralNetwork:
-    # constructor from an array of sizes of layers
-    def __init__(self, layer_sizes, data, categories, cost_function = MeanSquaredError):
+    # constructor from an array of sizes of layers - by default MSE cost and no regularization
+    def __init__(self, layer_sizes, data, categories, cost_function = MeanSquaredError, lmbda = 0):
         self.number_of_layers = len(layer_sizes)
         self.layer_sizes = layer_sizes
 
@@ -44,6 +44,9 @@ class NeuralNetwork:
 
         # set the cost function used
         self.cost_function = cost_function
+        
+        # set the L2 regularization lambda multiplier
+        self.lmbda = lmbda
         
         
     #
@@ -94,7 +97,8 @@ class NeuralNetwork:
         nabla_weights = [np.zeros((x,y)) for x,y in zip(self.layer_sizes[1:],self.layer_sizes[:-1])]
         nabla_biases = [np.zeros(s) for s in self.layer_sizes[1:]]
         
-        # go through each input in the mini batch and find gradient of Cx using backpropagation
+        # go through each input in the mini batch and find gradient of cost function C(x) for the single
+        # input x using backpropagation
         for x,y in mini_batch:
             nabla_weights_x, nabla_biases_x = self.backpropagate(x,y)
     
@@ -102,9 +106,17 @@ class NeuralNetwork:
             nabla_weights = [nw+nwx for nw,nwx in zip(nabla_weights,nabla_weights_x)]
             nabla_biases = [nb+nbx for nb,nbx in zip(nabla_biases,nabla_biases_x)]
         
+        # divide by mini batch size to finalise calculation of the cost function gradient (without the L2 regularization part)
+        nabla_weights = [nw/len(mini_batch) for nw in nabla_weights]
+        nabla_biases = [nb/len(mini_batch) for nb in nabla_biases]
+        
+        # add the L2 regularization's gradient (+ lambda/(2n) * (sum over each weight w): w^2 , 
+        # so gradient is +(lambda/n)*w , for each single weight w, where n is training dataset size)
+        nabla_weights = [nw+(self.lmbda/len(self.data.training_set))*w for w,nw in zip(self.weights,nabla_weights)]
+        
         # move by -n*gradient(C) where C is the cost function - gradient descent
-        self.weights = [w-(learning_rate/len(mini_batch))*nw for w,nw in zip(self.weights,nabla_weights)]
-        self.biases = [b-(learning_rate/len(mini_batch))*nb for b,nb in zip(self.biases,nabla_biases)]
+        self.weights = [w-learning_rate*nw for w,nw in zip(self.weights,nabla_weights)]
+        self.biases = [b-learning_rate*nb for b,nb in zip(self.biases,nabla_biases)]
         
     # method to calculate the gradient of the cost function C(x) for one input x
     def backpropagate(self, x, y):

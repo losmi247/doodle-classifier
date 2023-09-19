@@ -31,17 +31,21 @@ def main():
     nndata = Data((x_train, y_train),(x_validation, y_validation),(x_test, y_test), normalise_inputs=True, flatten_inputs=True)
 
     # create a NN and train it
-    nn = NeuralNetwork([784,30,10], nndata, np.arange(10), cost_function=CrossEntropy)
-    number_of_epochs = 30
+    nn = NeuralNetwork([784,30,10], nndata, np.arange(10), cost_function=CrossEntropy, lmbda=5.0)
+    number_of_epochs = 70
     mini_batch_size = 50
     eta = 0.01
     accuracies, cost_functions = nn.train(epochs=number_of_epochs, m=mini_batch_size, learning_rate=eta)
 
     # evaluate the model on the validation set
-    print("Accuracy on validation set: ", nn.evaluate_on_validation_set())
+    validation_accuracy = nn.evaluate_on_validation_set()
+    print("Accuracy on validation set: ", validation_accuracy)
     
-    # save the trained model's parameters
-    nn.save_network("network.txt")
+    # if validation accuracy is better than before, offer to save the trained model's parameters
+    if validation_accuracy > 0.92:
+        save = input("Input 'y' to save the model.")
+        if save == 'y':
+            nn.save_network("network.txt")
     
     # plot stuff
     fig, (ax1, ax2) = plt.subplots(1, 2)

@@ -41,12 +41,21 @@ class CostFunction(ABC):
 #
 # Class for the mean squared error cost function:
 #
-#   C = 1/(2n) * (sum over inputs x in train set): ||y(x)-a(x)||^2
-#     = 1/n * (sum over inputs x in train set): C(x)
+#   C = 1/(2n) * (sum over inputs x in train set): ||y(x)-a(x)||^2  + lmbda/(2n) * (sum over each weight w): w^2
+#     = 1/n * (sum over inputs x in train set): C(x)    + lmbda/(2n) * (sum over each weight w): w^2
 #
 # where y(x) is the expected vector output for input x, and
 # a(x) is the network's vector output for input a(x), and n
-# is the number of inputs in the train set.
+# is the number of inputs in the train set. The last part
+#
+#   + lambda/(2n) * (sum over each weight w): w^2
+#
+# is the L2 regularization term.
+#
+# The gradient of the regularization part (which turns out to be (lambda/n)*w) of the cost function
+# is added in the function 'process_mini_batch' in the NeuralNetwork class - this class's functions 
+# only compute derivatives of the cost functions C(x) for single inputs x, and also the entire cost 
+# function C including regularization.
 #
 class MeanSquaredError(CostFunction):
     # method to calculate the cost function on the train set
@@ -62,6 +71,9 @@ class MeanSquaredError(CostFunction):
             # add C(x) = ||y(x)-a(x)||^2 to the cost function so far
             c += np.linalg.norm(y_vector-a)**2
 
+        # add L2 regularization
+        c += neural_network.lmbda * np.sum([np.sum(w**2) for w in neural_network.weights])
+            
         c /= 2*len(neural_network.data.training_set)
 
         return c
@@ -85,14 +97,22 @@ class MeanSquaredError(CostFunction):
 #
 # Class for the cross entropy cost function:
 #
-#   C = -(1/n) * (sum over inputs x in train set): (sum over neurons j in last layer): y(x)_j*ln(a(x)_j) + (1−y(x)_j)*ln(1−a(x)_j)
-#     = -(1/n) * (sum over inputs x in train set): C(x)
+#   C = -(1/n) * (sum over inputs x in train set): (sum over neurons j in last layer): y(x)_j*ln(a(x)_j) + (1−y(x)_j)*ln(1−a(x)_j)  
+#       + lmbda/(2n) * (sum over each weight w): w^2
+#     = -(1/n) * (sum over inputs x in train set): C(x) + lmbda/(2n) * (sum over each weight w): w^2
 #
 # where y(x) is the expected vector output for input x, and
 # a(x) is the network's vector output for input a(x), and n
-# is the number of inputs in the train set.
+# is the number of inputs in the train set. The last part
 #
-#   TODO: fix the cross-entropy cross function
+#   + lambda/(2n) * (sum over each weight w): w^2
+#
+# is the L2 regularization term.
+#
+# The gradient of the regularization part (which turns out to be (lambda/n)*w) of the cost function
+# is added in the function 'process_mini_batch' in the NeuralNetwork class - this class's functions 
+# only compute derivatives of the cost functions C(x) for single inputs x, and also the entire cost 
+# function C including regularization.
 #
 class CrossEntropy(CostFunction):
     # method to calculate the cost function on the train set
@@ -108,6 +128,9 @@ class CrossEntropy(CostFunction):
 
             # subtract C(x) from the cost function so far
             c -= np.sum(np.nan_to_num(y_vector*np.log(a) + (1-y_vector)*np.log(1-a)))
+            
+        # add L2 regularization
+        c += (neural_network.lmbda/2) * np.sum([np.sum(w**2) for w in neural_network.weights])
 
         c /= len(neural_network.data.training_set)
 
